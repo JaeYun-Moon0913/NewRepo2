@@ -26,8 +26,6 @@ class mv:
         self.re = re
 
 
-
-
     # 마지막 layer 에서 activation, gradient 저장 
     def hook_feature(self,module, input, output):
         self.activations.append(output.cpu().data)
@@ -74,9 +72,9 @@ class mv:
 
         grad_ht = cv2.applyColorMap(np.uint8(255*grad_cam_map.squeeze().cpu()),cv2.COLORMAP_JET)
         if self.re: 
-            cv2.imwrite(os.path.join(self.pth +'/'+ best_score+'_'+bclass_name+'_'+self.f_name),grad_ht)
+            cv2.imwrite(os.path.join(self.pth +'/'+self.f_name+'_'+ best_score+'_'+bclass_name+'.jpg'),grad_ht)
 
-        cv2.imwrite(os.path.join(self.pth +'/'+ car_score+'_'+bclass_name+'_'+self.f_name),grad_ht)
+        cv2.imwrite(os.path.join(self.pth +'/'+ self.f_name+'_'+ car_score+'_'+bclass_name+'.jpg'),grad_ht)
         
 
 
@@ -90,7 +88,7 @@ class mv:
         grad_result = grad_result / np.max(grad_result)
         grad_result = np.uint8(255 * grad_result)
 
-        cv2.imwrite(os.path.join(self.pth + '/'+ car_score+'_'+bclass_name +'_result_'+ self.f_name),grad_result)
+        cv2.imwrite(os.path.join(self.pth + '/'+self.f_name+ '_'+car_score+'_'+bclass_name +'_result'+ '.jpg'),grad_result)
 
         # if best_class != self.label_idx:
         #     score_dif = logit[:,best_class].squeeze()
