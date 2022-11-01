@@ -1,7 +1,6 @@
 
 import os
 import cv2
-import numpy as np 
 import matplotlib.pyplot as plt
 
 import torch 
@@ -9,6 +8,9 @@ import torch.nn as nn
 import torchvision.models as models
 import torch.nn.functional as F
 from Guided_Backprop.Guided_Backprop import GuidedBackpropReLUModel, deprocess_image
+
+import numpy as np #numpy library
+#np.set_printoptions(threshold=np.inf, linewidth=np.inf) #inf = infinity 
 
 
 class mv:
@@ -42,17 +44,18 @@ class mv:
         
         logit = self.model(self.img)
         score = logit[:,self.label_idx].squeeze()
+        select_cls = self.label_list[self.label_idx]
         
         #print(score, self.f_name)
-        car_score = float(logit[:,self.label_idx].squeeze().cpu().data.numpy())
-        car_score = str(round(car_score,3))
+        select_sco = float(logit[:,self.label_idx].squeeze().cpu().data.numpy())
+        select_sco = str(round(select_sco,3))
 
-        best_class = np.argmax(logit.cpu().data.numpy())
+        predic_idx = np.argmax(logit.cpu().data.numpy())
 
-        best_score = float(logit[:,best_class].squeeze().cpu().data.numpy())
-        best_score = str(round(best_score,3))
+        predic_sco = float(logit[:,predic_idx].squeeze().cpu().data.numpy())
+        predic_sco = str(round(predic_sco,3))
 
-        bclass_name = self.label_list[best_class]
+        predic_cls = self.label_list[predic_idx]
         score.backward(retain_graph = True)
 
         act = self.activations[0].cuda() # (1, 512, 7, 7), forward activations
@@ -72,11 +75,20 @@ class mv:
 
         grad_ht = cv2.applyColorMap(np.uint8(255*grad_cam_map.squeeze().cpu()),cv2.COLORMAP_JET)
         if self.re: 
-            cv2.imwrite(os.path.join(self.pth +'/'+self.f_name+'_'+ best_score+'_'+bclass_name+'.jpg'),grad_ht)
+            cv2.imwrite(os.path.join(self.pth +'/'+self.f_name+'_'+ predic_sco+'_'+predic_cls+'.jpg'),grad_ht)
 
-        cv2.imwrite(os.path.join(self.pth +'/'+ self.f_name+'_'+ car_score+'_'+bclass_name+'.jpg'),grad_ht)
         
-
+        
+        else: 
+            # grad_cam_map 값 뽑기 
+            txt_par_pth =os.path.join(os.getcwd(),'./txt_result_grad_cam')
+            text_pth = os.path.join(txt_par_pth, self.f_name+'_'+select_sco+'_'+select_cls+'.txt')
+            #print(grad_cam_map.shape)
+            f = open(text_pth,'w')
+            f.write(str(grad_cam_map.squeeze().cpu().numpy()))
+            f.close()
+            
+        cv2.imwrite(os.path.join(self.pth +'/'+ self.f_name+'_'+ select_sco+'_'+select_cls+'.jpg'),grad_ht)
 
 
         # grad_cam + origin_img
@@ -88,11 +100,11 @@ class mv:
         grad_result = grad_result / np.max(grad_result)
         grad_result = np.uint8(255 * grad_result)
 
-        cv2.imwrite(os.path.join(self.pth + '/'+self.f_name+ '_'+car_score+'_'+bclass_name +'_result'+ '.jpg'),grad_result)
+        cv2.imwrite(os.path.join(self.pth + '/'+self.f_name+ '_'+select_sco+'_'+predic_cls +'_result'+ '.jpg'),grad_result)
 
-        # if best_class != self.label_idx:
-        #     score_dif = logit[:,best_class].squeeze()
-        #     dif_score = float((logit[:,best_class].squeeze().cpu().data.numpy()))
+        # if predic_cls != self.label_idx:
+        #     score_dif = logit[:,predic_cls].squeeze()
+        #     dif_score = float((logit[:,predic_cls].squeeze().cpu().data.numpy()))
         #     dif_score = str(dif_score)
         #     score_dif.backward(retain_graph = True)
         #     dact = self.activations[0].cuda() # (1, 512, 7, 7), forward activations
@@ -110,9 +122,9 @@ class mv:
         #     dgrad_cam_map = (dgrad_cam_map - dmap_min).div(dmap_max-dmap_min).data
 
         #     dgrad_ht = cv2.applyColorMap(np.uint8(255*dgrad_cam_map.squeeze().cpu()),cv2.COLORMAP_JET)
-        #     cv2.imwrite(os.path.join(self.pth +'/'+ '+++' +dif_score+'_'+bclass_name+'_'+self.f_name),dgrad_ht)
+        #     cv2.imwrite(os.path.join(self.pth +'/'+ '+++' +dif_score+'_'+predic_cls+'_'+self.f_name),dgrad_ht)
 
-        return best_class, self.label_list[best_class]
+        return grad_cam_map, predic_idx, predic_cls
 
     def grad_cam_return(self):
         return self.grad_cam_mp
