@@ -13,6 +13,7 @@ class VGG(nn.Module):
         self.vgg13 = {1:[64,64],2:[128,128],3:[256,256],4:[512,512],5:[512,512]}
         self.vgg16 = {1:[64,64],2:[128,128],3:[256,256,256],4:[512,512,512],5:[512,512,512]}
         self.vgg19 = {1:[64,64],2:[128,128],3:[256,256,256,256],4:[512,512,512,512],5:[512,512,512,512]}
+        
 
         if model_name == 'vgg11':
             model_name = self.vgg11
@@ -70,7 +71,7 @@ class VGG(nn.Module):
 
 
 
-def make_conv(list_conv,input_channels,batchnorm=False):
+def make_conv(list_conv,input_channels,batchnorm):
     layers = []
     in_planes = input_channels
     for value in list_conv:

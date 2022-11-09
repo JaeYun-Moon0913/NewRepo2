@@ -68,14 +68,14 @@ class mv:
         
         grad_cam_map = (wet*act).sum(1,keepdim = True)
         grad_cam_map = F.relu(grad_cam_map)
-        grad_cam_map = F.interpolate(grad_cam_map,size = (224,224),mode = 'bilinear',align_corners = False)
+        grad_cam_map = F.interpolate(grad_cam_map,size = (32,32),mode = 'bilinear',align_corners = False)
         map_min , map_max = grad_cam_map.min(), grad_cam_map.max() 
         grad_cam_map = (grad_cam_map - map_min).div(map_max-map_min).data
         self.grad_cam_mp = grad_cam_map
 
         grad_ht = cv2.applyColorMap(np.uint8(255*grad_cam_map.squeeze().cpu()),cv2.COLORMAP_JET)
         if self.re: 
-            cv2.imwrite(os.path.join(self.pth +'/'+self.f_name+'_'+ predic_sco+'_'+predic_cls+'.jpg'),grad_ht)
+             cv2.imwrite(os.path.join(self.pth +self.f_name+'_'+ predic_sco+'_'+predic_cls+'.jpg'),grad_ht)
 
         
         
@@ -124,7 +124,7 @@ class mv:
         #     dgrad_ht = cv2.applyColorMap(np.uint8(255*dgrad_cam_map.squeeze().cpu()),cv2.COLORMAP_JET)
         #     cv2.imwrite(os.path.join(self.pth +'/'+ '+++' +dif_score+'_'+predic_cls+'_'+self.f_name),dgrad_ht)
 
-        return grad_cam_map, predic_idx, predic_cls
+        return  predic_idx, predic_cls
 
     def grad_cam_return(self):
         return self.grad_cam_mp
